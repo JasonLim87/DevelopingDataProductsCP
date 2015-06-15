@@ -1,0 +1,81 @@
+---
+title       : Car MPG (Miles Per Gallon) Calculator
+subtitle    : 
+author      : Jason Lim
+job         : 
+framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : tomorrow      # 
+widgets     : []            # {mathjax, quiz, bootstrap}
+mode        : selfcontained # {standalone, draft}
+knit        : slidify::knit2slides
+---
+
+## Introduction
+
+Fuel efficiency is an important factor to look at when determining which car type/model to go for. A car with high fuel efficiency will save the driver money in the long run, and vice versa for a car with low fuel efficiency.
+
+This is a simple shiny app that predicts the MPG (Miles Per Gallon) of a car with specific number of Cylinders, its Horsepower, and transmission type (Auto/Manual) over a range of car weights (lb/1000).
+
+The dataset used to create the Linear Model for the above prediction is the mtcars dataset provided by R Studio.
+
+mtcars itself is extracted from the 1974 Motor Trend US magazine, and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973-74 models).
+
+--- .class #id 
+
+## How the App Work
+```{r,echo=FALSE,results="hide",message=FALSE}
+library(ggplot2)
+data(mtcars)
+attach(mtcars)
+
+mtcars$cyl  <- factor(mtcars$cyl)
+mtcars$vs   <- factor(mtcars$vs)
+mtcars$gear <- factor(mtcars$gear)
+mtcars$carb <- factor(mtcars$carb)
+mtcars$am   <- factor(mtcars$am,labels=c("Auto","Manual"))
+
+
+allModel<<-lm(mpg ~ .,data=mtcars)
+filtModel<<-step(allModel,direction="both")
+
+buildPlot<-function(cyl,hp,startWt,endWt,step,transType){
+  data<-data.frame(cyl,hp,startWt,transType)
+  nextWt<-startWt+step
+  
+  while (nextWt<=endWt)
+  {
+    addData<-c(cyl,hp,nextWt,transType)
+    
+    data<-rbind(data,addData)
+    nextWt<-nextWt+step
+  }
+  names(data)<-c("cyl","hp","wt","am")
+  data$cyl<-as.factor(data$cyl)
+  data$am<-as.factor(data$am)
+  data$hp<-as.numeric(data$hp)
+  data$wt<-as.numeric(data$wt)
+    
+  par(mar=c(5,4,1,2))
+  plot(data$wt,predict(filtModel,data),xlab="Car Weight (lb/1000)",ylab="Estimated MPG",type="o",col="blue")
+}
+```
+
+The linear model is first built using the lm() function, and then the step() function is used to further improve the model.
+
+The input values are then provided by the user, which will then be converted into a data.frame before the model can be used.
+
+Once the model has predicted the MPG for all inputs provided, a Line Chart is displayed for the user for easy analysis.
+
+--- .class #id 
+
+## Example
+```{r,message=FALSE}
+#The chart obtained when setting the weight range from 2.4 to 3.7 (lb/1000), Number of Cylinders =6, Manual Transmission Type and 8 Horsepower.
+buildPlot(6,8,2.4,3.7,0.1,"Manual")
+```
+
+--- .class #id 
+
+## End Word and Thank You
+Thank you for taking the time to read through this and I hope this simple MPG Calculator will assist you in your next car purchase!!
